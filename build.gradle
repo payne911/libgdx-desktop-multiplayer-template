@@ -1,0 +1,140 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        google()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        jcenter()
+    }
+    dependencies {
+    }
+}
+
+// to (try to) force download of sources and JavaDoc
+plugins {
+    id 'java'
+    id 'idea'
+}
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+allprojects {
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+
+    ext {
+        appName = "marvelous-bob"
+        gdxVersion = '1.9.12-SNAPSHOT'
+
+        gdxAiVersion = '1.8.2'
+
+        // basic utilities provided by this template
+        logback = '1.2.3'
+        lombok = '1.18.12'
+        kryonet = '2.22.6'
+
+        pieMenuVersion = '5.0.0'
+        jbump = '810e7472bd'
+//        shapeDrawer = '2.3.0'
+        shapeDrawer = '912a367dac'
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        google()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+        maven { url 'https://jitpack.io' }
+        jcenter()
+    }
+}
+
+// shared by all modules
+subprojects {
+    apply plugin: 'java-library'
+
+    version = '0.0.1-SNAPSHOT'
+    ext.appName = 'multiplayer-template'
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+        maven { url 'https://jitpack.io' }
+        jcenter()
+    }
+
+    sourceCompatibility = 14 // For Java 14
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += "--enable-preview"
+    }
+    tasks.withType(Test) {
+        jvmArgs += "--enable-preview"
+    }
+    tasks.withType(JavaExec) {
+        jvmArgs += '--enable-preview'
+    }
+    sourceSets.main.java.srcDirs = [ "src/" ]
+
+    compileJava {
+        options.incremental = true
+    }
+
+    dependencies {
+        // Lombok is a powerful compile-time code-generation tool
+        // which uses annotations to remove boilerplate code in Java
+        compileOnly "org.projectlombok:lombok:$lombok"
+        annotationProcessor "org.projectlombok:lombok:$lombok"
+
+        // Logback provides the Slf4j logging API
+        // which can be used via Lombok's "@Slf4j" annotation
+        api "ch.qos.logback:logback-classic:$logback"
+        api "com.github.crykn:kryonet:$kryonet"
+    }
+}
+
+
+
+
+project(":desktop") {
+    dependencies {
+        api project(":client")
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        api "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
+    }
+}
+
+project(":client") {
+    dependencies {
+        api project(":shared")
+        api "com.badlogicgames.gdx:gdx-backend-lwjgl:$gdxVersion"
+
+        api "com.github.payne911:PieMenu:$pieMenuVersion"
+    }
+}
+
+project(":server") {
+    dependencies {
+        api project(":shared")
+        api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+
+        api "com.github.SquidPony.SquidLib:squidlib-util:a6158b22b1"
+    }
+}
+
+project(":shared") {
+    dependencies {
+        api "com.badlogicgames.gdx:gdx:$gdxVersion"
+        api "com.badlogicgames.gdx:gdx-ai:$gdxAiVersion"
+
+        api "space.earlygrey:shapedrawer:$shapeDrawer"
+        api "com.github.tommyettinger:jbump:$jbump"
+    }
+}

@@ -1,0 +1,442 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  Generator: "former2"
+Description: "A template for a Free-Tier server running fr"
+Parameters: # todo: ask for SSH Key for accessing the server ?
+  AdminUserName:
+    Type: "String"
+    Default: "admin"
+    AllowedPattern: "^[a-zA-Z]*$"
+    ConstraintDescription: "Only letters are allowed."
+  BudgetAlarmEmail:
+    Type: "String"
+    Default: "email@example.com"
+  ProjectName:
+    Type: "String"
+    Description: "This will be added in front of most of your services so that you can more easily identify them in the AWS Console."
+    Default: "MyProject"
+    AllowedPattern: "^[a-zA-Z]*$"
+    ConstraintDescription: "Only letters are allowed."
+  DockerHubImage:
+    Type: "String"
+    Description: "Point to your DockerHub image. The provided default is an example. It goes 'DockerHubUserName/RepositoryName:latest'"
+    Default: "payne911/marvelous-bob-server:latest"
+
+  VPC:
+    Type: AWS::EC2::VPC::Id
+  SubnetA:
+    Type: AWS::EC2::Subnet::Id
+  SubnetB:
+    Type: AWS::EC2::Subnet::Id
+  Region:
+    Type: "String"
+    Default: "us-east-1"
+    AllowedValues:
+      - "us-east-1"
+      - "us-east-2"
+      - "us-west-1"
+      - "us-west-2"
+      - "ap-northeast-1"
+      - "ap-northeast-2"
+      - "ap-south-1"
+      - "ap-southeast-1"
+      - "ap-southeast-2"
+      - "ca-central-1"
+      - "eu-central-1"
+      - "eu-north-1"
+      - "eu-west-1"
+      - "eu-west-2"
+      - "eu-west-3"
+      - "sa-east-1"
+
+Mappings:
+  RegionToAmiMap:
+    us-east-1:
+      AMI: "ami-0c1f575380708aa63"
+    us-east-2:
+      AMI: "ami-015a2afe7e1a8af56"
+    us-west-1:
+      AMI: "ami-032a827d612b78a50"
+    us-west-2:
+      AMI: "ami-05edb14e89a5b98f3"
+    ap-northeast-1:
+      AMI: "ami-06ee72c3360fd7fad"
+    ap-northeast-2:
+      AMI: "ami-0cfc5eb79eceeeec9"
+    ap-south-1:
+      AMI: "ami-078902ae8103daac8"
+    ap-southeast-1:
+      AMI: "ami-09dd721a797640468"
+    ap-southeast-2:
+      AMI: "ami-040bd2e2325535b3d"
+    ca-central-1:
+      AMI: "ami-0a06b44c462364156"
+    eu-central-1:
+      AMI: "ami-09509e8f8dea8ab83"
+    eu-north-1:
+      AMI: "ami-015b157d082fd4e0d"
+    eu-west-1:
+      AMI: "ami-0489c3efb4fe85f5d"
+    eu-west-2:
+      AMI: "ami-037dd70536680c11f"
+    eu-west-3:
+      AMI: "ami-0182381900083ba64"
+    sa-east-1:
+      AMI: "ami-05313c3a9e9148109"
+
+
+Resources:
+  IAMUserAdmin:
+    Type: "AWS::IAM::User"
+    Properties:
+      Path: "/"
+      UserName: !Ref AdminUserName
+      Groups:
+        - !Ref IAMGroup
+
+  IAMGroupAdmin:
+    Type: "AWS::IAM::Group"
+    Properties:
+      Path: "/"
+      GroupName: "admin"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+        - "arn:aws:iam::aws:policy/job-function/Billing"
+        - "arn:aws:iam::aws:policy/IAMUserChangePassword"
+
+  IAMRoleEcsAssume:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: "ecsInstanceRole"
+      AssumeRolePolicyDocument: "{\"Version\":\"2008-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+
+  IAMServiceLinkedRole:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "autoscaling.amazonaws.com"
+      Description: !Sub "Default Service-Linked Role enables access to ${EC2PrefixList.OwnerId} Services and Resources used or managed by Auto Scaling"
+
+  IAMServiceLinkedRole2:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "support.amazonaws.com"
+      Description: !Sub "Enables resource access for ${EC2PrefixList.OwnerId} to provide billing, ${IAMGroup} administrative and support services"
+
+  IAMServiceLinkedRole3:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "ecs.amazonaws.com"
+      Description: "Role to enable Amazon ECS to manage your cluster."
+
+  IAMServiceLinkedRole4:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "trustedadvisor.amazonaws.com"
+      Description: !Sub "Access for the ${EC2PrefixList.OwnerId} Trusted Advisor Service to help reduce cost, increase performance, and improve security of your ${EC2PrefixList.OwnerId} environment."
+
+  IAMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      InstanceProfileName: !Ref IAMRoleEcsAssume
+      Roles:
+        - !GetAtt IAMRoleEcsAssume.Arn
+
+  IAMAccessKey:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Status: "Active"
+      UserName: !Ref AdminUserName
+
+  EC2Subnet: # todo
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Sub "${Region}d"
+      CidrBlock: "172.31.32.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+
+  EC2Subnet2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !GetAtt EC2Instance.AvailabilityZone
+      CidrBlock: "172.31.0.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+
+  EC2EIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc"
+      InstanceId: !Ref EC2Instance
+      Tags:
+        -
+          Key: "Name"
+          Value: !Sub "${ProjectName}-EIP"
+
+  EC2EIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: !GetAtt EC2EIP.AllocationId
+      InstanceId: !Ref EC2Instance
+      NetworkInterfaceId: "eni-01f3f4c88eec693f2"
+      PrivateIpAddress: !GetAtt EC2Instance.PrivateIp
+
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: !FindInMap [RegionToAmiMap, !Ref Region, AMI]
+      InstanceType: "t2.micro"
+      KeyName: !Sub "${ProjectName}-SSH-KeyPair" # todo: https://stackoverflow.com/a/59987984/9768291
+      AvailabilityZone: !Sub "${Region}b"
+      Tenancy: "default"
+      SubnetId: !Ref SubnetA
+      EbsOptimized: false
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SourceDestCheck: true
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+            Encrypted: false
+            VolumeSize: 30
+            SnapshotId: "snap-06d219b869139967b" # todo REMOVE? (comes from ECS-Optimized AMI?) aws ec2 describe-snapshots --snapshot-ids snap-06d219b869139967b
+            VolumeType: "gp2"
+            DeleteOnTermination: true
+      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw=="
+      IamInstanceProfile: !Ref IAMRoleEcsAssume
+      Monitoring: true
+      Tags:
+        -
+          Key: "aws:cloudformation:logical-id"
+          Value: "EcsInstanceAsg"
+        -
+          Key: "aws:autoscaling:groupName"
+          Value: !Ref AutoScalingAutoScalingGroup
+        -
+          Key: "aws:cloudformation:stack-id"
+          Value: !Sub "arn:aws:cloudformation:${Region}:${AWS::AccountId}:stack/EC2ContainerService-${ECSCluster}/05e9b9e0-a8d7-11ea-a24a-068f4db663b8"
+        -
+          Key: "aws:cloudformation:stack-name"
+          Value: !Sub "EC2ContainerService-${ECSCluster}"
+        -
+          Key: "Description"
+          Value: "This instance is the part of the Auto Scaling group which was created through ECS Console"
+        -
+          Key: "Name"
+          Value: !Sub "ECS Instance - EC2ContainerService-${ECSCluster}"
+      HibernationOptions:
+        Configured: false
+      CpuOptions:
+        CoreCount: 1
+        ThreadsPerCore: 1
+
+  AutoScalingAutoScalingGroup:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+      AutoScalingGroupName: !Sub "EC2ContainerService-${ECSCluster}-EcsInstanceAsg-D934EGYP57SY"
+      LaunchConfigurationName: !Ref AutoScalingLaunchConfiguration
+      MinSize: 0
+      MaxSize: 1
+      DesiredCapacity: 1
+      Cooldown: 300
+      AvailabilityZones:
+        - !GetAtt EC2Subnet.AvailabilityZone
+        - !Sub "${Region}b"
+        - !GetAtt EC2Subnet3.AvailabilityZone
+      HealthCheckType: "EC2"
+      HealthCheckGracePeriod: 0
+      VPCZoneIdentifier:
+        - !Ref EC2Subnet
+        - "subnet-4d930437"
+        - !Ref EC2Subnet3
+      TerminationPolicies:
+        - "Default"
+      ServiceLinkedRoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/autoscaling.amazonaws.com/${EC2PrefixList.OwnerId}ServiceRoleForAutoScaling"
+      Tags:
+        -
+          Key: "Description"
+          Value: "This instance is the part of the Auto Scaling group which was created through ECS Console"
+          PropagateAtLaunch: true
+        -
+          Key: "Name"
+          Value: !Sub "ECS Instance - EC2ContainerService-${ECSCluster}"
+          PropagateAtLaunch: true
+        -
+          Key: "aws:cloudformation:logical-id"
+          Value: "EcsInstanceAsg"
+          PropagateAtLaunch: true
+        -
+          Key: "aws:cloudformation:stack-id"
+          Value: !Sub "arn:aws:cloudformation:${Region}:${AWS::AccountId}:stack/EC2ContainerService-${ECSCluster}/05e9b9e0-a8d7-11ea-a24a-068f4db663b8"
+          PropagateAtLaunch: true
+        -
+          Key: "aws:cloudformation:stack-name"
+          Value: !Sub "EC2ContainerService-${ECSCluster}"
+          PropagateAtLaunch: true
+
+  EC2SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Sub "SecurityGroup for our ${ProjectName} server"
+      GroupName: !Sub "${ProjectName}-SG"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        -
+          CidrIp: "0.0.0.0/0"
+          Description: "Allow TCP HTTP connection from all"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
+        -
+          CidrIp: "0.0.0.0/0"
+          Description: "Allow SSH connection from all (still requires a KeyPair!)"
+          FromPort: 22
+          IpProtocol: "tcp"
+          ToPort: 22
+      SecurityGroupEgress:
+        -
+          CidrIp: "0.0.0.0/0"
+          IpProtocol: "-1"
+
+  AutoScalingLaunchConfiguration:
+    Type: "AWS::AutoScaling::LaunchConfiguration"
+    Properties:
+      LaunchConfigurationName: !Sub "EC2ContainerService-${ECSCluster}-EcsInstanceLc-3IB1QWTJ6QJW"
+      ImageId: !FindInMap [RegionToAmiMap, !Ref Region, AMI]
+      KeyName: !GetAtt EC2Instance.KeyName
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw=="
+      InstanceType: "t2.micro"
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeSize: 30
+            VolumeType: "gp2"
+      InstanceMonitoring: true
+      IamInstanceProfile: !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/${IAMRoleEcsAssume}"
+      EbsOptimized: false
+      AssociatePublicIpAddress: true
+
+  EC2Volume:
+    Type: "AWS::EC2::Volume"
+    Properties:
+      AvailabilityZone: !GetAtt EC2Subnet.AvailabilityZone
+      Encrypted: false
+      Size: 30
+      VolumeType: "gp2"
+      SnapshotId: "snap-06d219b869139967b" # todo REMOVE? (comes from ECS-Optimized AMI?) aws ec2 describe-snapshots --snapshot-ids snap-06d219b869139967b
+
+  EC2VolumeAttachment:
+    Type: "AWS::EC2::VolumeAttachment"
+    Properties:
+      VolumeId: !Ref EC2Volume
+      InstanceId: !Ref EC2Instance
+      Device: "/dev/xvda"
+
+  ECSCluster:
+    Type: "AWS::ECS::Cluster"
+    Properties:
+      ClusterName: !Sub "${ProjectName}-ECS-Cluster"
+      ClusterSettings:
+        -
+          Name: "containerInsights"
+          Value: "disabled"
+
+  ECSService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      ServiceName: !Sub "${ProjectName}-ECS-Service"
+      Cluster: !GetAtt ECSCluster.Arn
+      DesiredCount: 1
+      LaunchType: "EC2"
+      TaskDefinition: !Ref ECSTaskDefinition
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
+      PlacementStrategies:
+        -
+          Type: "spread"
+          Field: "attribute:ecs.availability-zone"
+        -
+          Type: "spread"
+          Field: "instanceId"
+      SchedulingStrategy: "REPLICA"
+
+  ECSTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        -
+          Cpu: 10
+          EntryPoint:
+            - "./bootstrap.sh"
+          Essential: true
+          Image: !Ref DockerHubImage
+          Memory: 300
+          Name: !Sub "${ProjectName}-ECS-TD-container-name"
+          PortMappings:
+            -
+              ContainerPort: 80
+              HostPort: 80
+              Protocol: "tcp"
+          WorkingDirectory: "/"
+      Family: !Sub "${ProjectName}-ECS-TD"
+      RequiresCompatibilities:
+        - "EC2"
+
+  BudgetsBudget:
+    Type: "AWS::Budgets::Budget"
+    Properties:
+      Budget:
+        BudgetLimit:
+          Amount: "1.0" # minimum amount
+          Unit: "USD"
+        TimePeriod:
+          Start: {}
+          End: {}
+        TimeUnit: "MONTHLY" # checks for "AMOUNT" excess over a month projection
+        CostFilters: {}
+        BudgetName: !Sub "${ProjectName}-PoorMan-Budget-Alarm"
+        CostTypes:
+          IncludeTax: true
+          IncludeSubscription: true
+          UseBlended: false
+          IncludeRefund: false
+          IncludeCredit: false
+          IncludeUpfront: true
+          IncludeRecurring: true
+          IncludeOtherSubscription: true
+          IncludeSupport: true
+          IncludeDiscount: true
+          UseAmortized: false
+        BudgetType: "COST"
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 1 # triggers when 0.02$ is projected
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetAlarmEmail
+
+Outputs:
+  ServerPublicIp:
+    Description: "Public IP of your server."
+    Value: !GetAtt Server.PublicIp
+  ServerPublicDns:
+    Description: "Public DNS of your server."
+    Value: !GetAtt Server.PublicDnsName
+  IAMUserAccessKeyId: # todo: do we actually need this?
+    Description: "The IAM Access Key Id to be used to reference to the IAM User you'll use to access your project in the AWS Console."
+    Value: !Ref IAMAccessKey
+  IAMUserSecretAccessKey:
+    Description: "The IAM Secret Access Key to be used to reference to the IAM User you'll use to access your project in the AWS Console."
+    Value: !GetAtt IAMAccessKey.SecretAccessKey

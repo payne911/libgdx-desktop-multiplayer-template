@@ -1,0 +1,666 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  Generator: "former2"
+Description: ""
+Parameters:
+  awsregion:
+    Type: "String"
+    Default: "ca-central-1"
+    AllowedValues:
+      - "ca-central-1"
+      - "us-west-1"
+      - "us-east-1"
+
+Resources:
+  IAMUser:
+    Type: "AWS::IAM::User"
+    Properties:
+      Path: "/"
+      UserName: "former2_readonly"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+
+  IAMUser2:
+    Type: "AWS::IAM::User"
+    Properties:
+      Path: "/"
+      UserName: "olleap"
+      Groups:
+        - !Ref IAMGroup
+
+  IAMUser3:
+    Type: "AWS::IAM::User"
+    Properties:
+      Path: "/"
+      UserName: "payne"
+      Groups:
+        - !Ref IAMGroup
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/job-function/Billing"
+        - "arn:aws:iam::aws:policy/IAMUserChangePassword"
+
+  IAMGroup:
+    Type: "AWS::IAM::Group"
+    Properties:
+      Path: "/"
+      GroupName: "admin"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  IAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: "ecsInstanceRole"
+      AssumeRolePolicyDocument: "{\"Version\":\"2008-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+
+  IAMServiceLinkedRole:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "autoscaling.amazonaws.com"
+      Description: !Sub "Default Service-Linked Role enables access to ${EC2PrefixList.OwnerId} Services and Resources used or managed by Auto Scaling"
+
+  IAMServiceLinkedRole2:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "support.amazonaws.com"
+      Description: !Sub "Enables resource access for ${EC2PrefixList.OwnerId} to provide billing, ${IAMGroup}istrative and support services"
+
+  IAMServiceLinkedRole3:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "ecs.amazonaws.com"
+      Description: "Role to enable Amazon ECS to manage your cluster."
+
+  IAMServiceLinkedRole4:
+    Type: "AWS::IAM::ServiceLinkedRole"
+    Properties:
+      AWSServiceName: "trustedadvisor.amazonaws.com"
+      Description: !Sub "Access for the ${EC2PrefixList.OwnerId} Trusted Advisor Service to help reduce cost, increase performance, and improve security of your ${EC2PrefixList.OwnerId} environment."
+
+  IAMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      InstanceProfileName: !Ref IAMRole
+      Roles:
+        - !GetAtt IAMRole.Arn
+
+  IAMAccessKey:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Status: "Active"
+      UserName: "former2_readonly"
+
+  IAMAccessKey2:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Status: "Active"
+      UserName: "olleap"
+
+  IAMAccessKey3:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Status: "Active"
+      UserName: "olleap"
+
+  IAMAccessKey4:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Status: "Active"
+      UserName: "payne"
+
+  IAMAccessKey5:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Status: "Active"
+      UserName: "payne"
+
+  EC2VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "172.31.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: "default"
+
+  EC2Subnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Sub "${awsregion}d"
+      CidrBlock: "172.31.32.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+
+  EC2Subnet2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !GetAtt EC2Instance.AvailabilityZone
+      CidrBlock: "172.31.0.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+
+  EC2Subnet3:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Sub "${awsregion}a"
+      CidrBlock: "172.31.16.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+
+  EC2InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+
+  EC2EIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc"
+      InstanceId: !Ref EC2Instance
+      Tags:
+        -
+          Key: "Name"
+          Value: "marvellous-bob"
+
+  EC2EIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: !GetAtt EC2EIP.AllocationId
+      InstanceId: !Ref EC2Instance
+      NetworkInterfaceId: "eni-01f3f4c88eec693f2"
+      PrivateIpAddress: !GetAtt EC2Instance.PrivateIp
+
+  EC2DHCPOptions:
+    Type: "AWS::EC2::DHCPOptions"
+    Properties:
+      DomainName: !Sub "${awsregion}.compute.internal"
+
+  EC2VPCDHCPOptionsAssociation:
+    Type: "AWS::EC2::VPCDHCPOptionsAssociation"
+    Properties:
+      DhcpOptionsId: !Ref EC2DHCPOptions
+      VpcId: !Ref EC2VPC
+
+  EC2NetworkAcl:
+    Type: "AWS::EC2::NetworkAcl"
+    Properties:
+      VpcId: !Ref EC2VPC
+
+  EC2NetworkAclEntry:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties:
+      CidrBlock: "0.0.0.0/0"
+      Egress: true
+      NetworkAclId: !Ref EC2NetworkAcl
+      Protocol: -1
+      RuleAction: "allow"
+      RuleNumber: 100
+
+  EC2NetworkAclEntry2:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties:
+      CidrBlock: "0.0.0.0/0"
+      Egress: false
+      NetworkAclId: !Ref EC2NetworkAcl
+      Protocol: -1
+      RuleAction: "allow"
+      RuleNumber: 100
+
+  EC2RouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref EC2VPC
+
+  EC2Route:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref EC2InternetGateway
+      RouteTableId: !Ref EC2RouteTable
+
+  EC2VPCGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref EC2InternetGateway
+      VpcId: !Ref EC2VPC
+
+  EC2SubnetNetworkAclAssociation:
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    Properties:
+      SubnetId: !Ref EC2Subnet2
+      NetworkAclId: !Ref EC2NetworkAcl
+
+  EC2SubnetNetworkAclAssociation2:
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    Properties:
+      SubnetId: !Ref EC2Subnet3
+      NetworkAclId: !Ref EC2NetworkAcl
+
+  EC2SubnetNetworkAclAssociation3:
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    Properties:
+      SubnetId: !Ref EC2Subnet
+      NetworkAclId: !Ref EC2NetworkAcl
+
+  EC2PrefixList:
+    Type: "AWS::EC2::PrefixList"
+    Properties:
+      AddressFamily: "IPv4"
+      PrefixListName: !Sub "com.amazonaws.${awsregion}.dynamodb"
+      Entries:
+        -
+          Cidr: "52.94.14.0/24"
+
+  EC2PrefixList2:
+    Type: "AWS::EC2::PrefixList"
+    Properties:
+      AddressFamily: "IPv4"
+      PrefixListName: !Sub "com.amazonaws.${awsregion}.s3"
+      Entries:
+        -
+          Cidr: "3.5.252.0/22"
+        -
+          Cidr: "52.95.145.0/24"
+        -
+          Cidr: "52.95.146.0/23"
+
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: "ami-01a7c134a00678ad6"
+      InstanceType: "t2.micro"
+      KeyName: "MarvelousBobSSHKeyPair"
+      AvailabilityZone: !Sub "${awsregion}b"
+      Tenancy: "default"
+      SubnetId: "subnet-4d930437"
+      EbsOptimized: false
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SourceDestCheck: true
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+            Encrypted: false
+            VolumeSize: 30
+            SnapshotId: "snap-06d219b869139967b"
+            VolumeType: "gp2"
+            DeleteOnTermination: true
+      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw=="
+      IamInstanceProfile: !Ref IAMRole
+      Monitoring: true
+      Tags:
+        -
+          Key: "aws:cloudformation:logical-id"
+          Value: "EcsInstanceAsg"
+        -
+          Key: "aws:autoscaling:groupName"
+          Value: !Ref AutoScalingAutoScalingGroup
+        -
+          Key: "aws:cloudformation:stack-id"
+          Value: !Sub "arn:aws:cloudformation:${awsregion}:${AWS::AccountId}:stack/EC2ContainerService-${ECSCluster}/05e9b9e0-a8d7-11ea-a24a-068f4db663b8"
+        -
+          Key: "aws:cloudformation:stack-name"
+          Value: !Sub "EC2ContainerService-${ECSCluster}"
+        -
+          Key: "Description"
+          Value: "This instance is the part of the Auto Scaling group which was created through ECS Console"
+        -
+          Key: "Name"
+          Value: !Sub "ECS Instance - EC2ContainerService-${ECSCluster}"
+      HibernationOptions:
+        Configured: false
+      CpuOptions:
+        CoreCount: 1
+        ThreadsPerCore: 1
+
+  AutoScalingAutoScalingGroup:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+      AutoScalingGroupName: !Sub "EC2ContainerService-${ECSCluster}-EcsInstanceAsg-D934EGYP57SY"
+      LaunchConfigurationName: !Ref AutoScalingLaunchConfiguration
+      MinSize: 0
+      MaxSize: 1
+      DesiredCapacity: 1
+      Cooldown: 300
+      AvailabilityZones:
+        - !GetAtt EC2Subnet.AvailabilityZone
+        - !Sub "${awsregion}b"
+        - !GetAtt EC2Subnet3.AvailabilityZone
+      HealthCheckType: "EC2"
+      HealthCheckGracePeriod: 0
+      VPCZoneIdentifier:
+        - !Ref EC2Subnet
+        - "subnet-4d930437"
+        - !Ref EC2Subnet3
+      TerminationPolicies:
+        - "Default"
+      ServiceLinkedRoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/autoscaling.amazonaws.com/${EC2PrefixList.OwnerId}ServiceRoleForAutoScaling"
+      Tags:
+        -
+          Key: "Description"
+          Value: "This instance is the part of the Auto Scaling group which was created through ECS Console"
+          PropagateAtLaunch: true
+        -
+          Key: "Name"
+          Value: !Sub "ECS Instance - EC2ContainerService-${ECSCluster}"
+          PropagateAtLaunch: true
+        -
+          Key: "aws:cloudformation:logical-id"
+          Value: "EcsInstanceAsg"
+          PropagateAtLaunch: true
+        -
+          Key: "aws:cloudformation:stack-id"
+          Value: !Sub "arn:aws:cloudformation:${awsregion}:${AWS::AccountId}:stack/EC2ContainerService-${ECSCluster}/05e9b9e0-a8d7-11ea-a24a-068f4db663b8"
+          PropagateAtLaunch: true
+        -
+          Key: "aws:cloudformation:stack-name"
+          Value: !Sub "EC2ContainerService-${ECSCluster}"
+          PropagateAtLaunch: true
+
+  EC2SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "SG for our Marvellous Bob server"
+      GroupName: "MarvellousBobSG"
+      VpcId: !Ref EC2VPC
+      SecurityGroupIngress:
+        -
+          CidrIp: "173.246.10.147/32"
+          Description: "Jay"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
+        -
+          CidrIp: "174.138.212.232/32"
+          Description: "Oli"
+          FromPort: 80
+          IpProtocol: "tcp"
+          ToPort: 80
+        -
+          CidrIp: "173.246.10.147/32"
+          Description: "Jay : Allow SSH from remote"
+          FromPort: 22
+          IpProtocol: "tcp"
+          ToPort: 22
+        -
+          CidrIp: "174.138.212.232/32"
+          Description: "Oli : Allow SSH from remote"
+          FromPort: 22
+          IpProtocol: "tcp"
+          ToPort: 22
+      SecurityGroupEgress:
+        -
+          CidrIp: "0.0.0.0/0"
+          IpProtocol: "-1"
+
+  EC2SecurityGroup2:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "default VPC security group"
+      GroupName: "default"
+      VpcId: !Ref EC2VPC
+      SecurityGroupIngress:
+        -
+          SourceSecurityGroupId: "sg-3113a652"
+          SourceSecurityGroupOwnerId: !Ref AWS::AccountId
+          IpProtocol: "-1"
+      SecurityGroupEgress:
+        -
+          CidrIp: "0.0.0.0/0"
+          IpProtocol: "-1"
+
+  AutoScalingLaunchConfiguration:
+    Type: "AWS::AutoScaling::LaunchConfiguration"
+    Properties:
+      LaunchConfigurationName: !Sub "EC2ContainerService-${ECSCluster}-EcsInstanceLc-3IB1QWTJ6QJW"
+      ImageId: "ami-01a7c134a00678ad6"
+      KeyName: "MarvelousBobSSHKeyPair"
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw=="
+      InstanceType: "t2.micro"
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeSize: 30
+            VolumeType: "gp2"
+      InstanceMonitoring: true
+      IamInstanceProfile: !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/${IAMRole}"
+      EbsOptimized: false
+      AssociatePublicIpAddress: true
+
+  EC2Volume:
+    Type: "AWS::EC2::Volume"
+    Properties:
+      AvailabilityZone: !GetAtt EC2Subnet2.AvailabilityZone
+      Encrypted: false
+      Size: 30
+      VolumeType: "gp2"
+      SnapshotId: "snap-06d219b869139967b"
+
+  EC2VolumeAttachment:
+    Type: "AWS::EC2::VolumeAttachment"
+    Properties:
+      VolumeId: !Ref EC2Volume
+      InstanceId: !Ref EC2Instance
+      Device: "/dev/xvda"
+
+  EC2NetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties:
+      Description: ""
+      PrivateIpAddress: !GetAtt EC2Instance.PrivateIp
+      PrivateIpAddresses:
+        -
+          PrivateIpAddress: !GetAtt EC2Instance.PrivateIp
+          Primary: true
+      SubnetId: !Ref EC2Subnet2
+      SourceDestCheck: true
+      GroupSet:
+        - !Ref EC2SecurityGroup
+
+  EC2NetworkInterfaceAttachment:
+    Type: "AWS::EC2::NetworkInterfaceAttachment"
+    Properties:
+      NetworkInterfaceId: "eni-01f3f4c88eec693f2"
+      DeviceIndex: 0
+      InstanceId: !Ref EC2Instance
+      DeleteOnTermination: true
+
+  ElastiCacheParameterGroup:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "memcached1.4"
+      Description: "Default parameter group for memcached1.4"
+
+  ElastiCacheParameterGroup2:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "memcached1.5"
+      Description: "Default parameter group for memcached1.5"
+
+  ElastiCacheParameterGroup3:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "memcached1.6"
+      Description: "Default parameter group for memcached1.6"
+
+  ElastiCacheParameterGroup4:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis2.6"
+      Description: "Default parameter group for redis2.6"
+
+  ElastiCacheParameterGroup5:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis2.8"
+      Description: "Default parameter group for redis2.8"
+
+  ElastiCacheParameterGroup6:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis3.2"
+      Description: "Default parameter group for redis3.2"
+
+  ElastiCacheParameterGroup7:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis3.2"
+      Description: "Customized default parameter group for redis3.2 with cluster mode on"
+
+  ElastiCacheParameterGroup8:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis4.0"
+      Description: "Default parameter group for redis4.0"
+
+  ElastiCacheParameterGroup9:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis4.0"
+      Description: "Customized default parameter group for redis4.0 with cluster mode on"
+
+  ElastiCacheParameterGroup10:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis5.0"
+      Description: "Default parameter group for redis5.0"
+
+  ElastiCacheParameterGroup11:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis5.0"
+      Description: "Customized default parameter group for redis5.0 with cluster mode on"
+
+  ElastiCacheParameterGroup12:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis6.x"
+      Description: "Default parameter group for redis6.x"
+
+  ElastiCacheParameterGroup13:
+    Type: "AWS::ElastiCache::ParameterGroup"
+    Properties:
+      CacheParameterGroupFamily: "redis6.x"
+      Description: "Customized default parameter group for redis6.x with cluster mode on"
+
+  OpsWorksUserProfile:
+    Type: "AWS::OpsWorks::UserProfile"
+    Properties:
+      AllowSelfManagement: false
+      IamUserArn: !Sub "arn:aws:iam::${AWS::AccountId}:user/former2_readonly"
+      SshUsername: "former2_readonly"
+
+  ElasticBeanstalkApplication:
+    Type: "AWS::ElasticBeanstalk::Application"
+    Properties:
+      ApplicationName: "rdhtrdhtrdhtrdh"
+
+  ElasticBeanstalkApplication2:
+    Type: "AWS::ElasticBeanstalk::Application"
+    Properties:
+      ApplicationName: "MarvelousBob"
+
+  ECSCluster:
+    Type: "AWS::ECS::Cluster"
+    Properties:
+      ClusterName: "marvelous-bob-ecs-cluster"
+      ClusterSettings:
+        -
+          Name: "containerInsights"
+          Value: "disabled"
+
+  ECSService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      ServiceName: "marvelous-bob-ecs-service"
+      Cluster: !GetAtt ECSCluster.Arn
+      DesiredCount: 1
+      LaunchType: "EC2"
+      TaskDefinition: !Ref ECSTaskDefinition
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
+      PlacementStrategies:
+        -
+          Type: "spread"
+          Field: "attribute:ecs.availability-zone"
+        -
+          Type: "spread"
+          Field: "instanceId"
+      SchedulingStrategy: "REPLICA"
+
+  ECSTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        -
+          Cpu: 10
+          EntryPoint:
+            - "./bootstrap.sh"
+          Essential: true
+          Image: "payne911/marvelous-bob-server:b7a8b61400bdebe3c03e6e1b5349c926a3e60fb9"
+          Memory: 300
+          Name: "marvelous-bob-ecs-td-container-name"
+          PortMappings:
+            -
+              ContainerPort: 80
+              HostPort: 80
+              Protocol: "tcp"
+          WorkingDirectory: "/"
+      Family: "marvelous-bob-ecs-td"
+      RequiresCompatibilities:
+        - "EC2"
+
+  ApiGatewayAccount:
+    Type: "AWS::ApiGateway::Account"
+
+  BudgetsBudget:
+    Type: "AWS::Budgets::Budget"
+    Properties:
+      Budget:
+        BudgetLimit:
+          Amount: "1.0"
+          Unit: "USD"
+        TimePeriod:
+          Start: {}
+          End: {}
+        TimeUnit: "MONTHLY"
+        CostFilters: {}
+        BudgetName: "pay nothing"
+        CostTypes:
+          IncludeTax: true
+          IncludeSubscription: true
+          UseBlended: false
+          IncludeRefund: false
+          IncludeCredit: false
+          IncludeUpfront: true
+          IncludeRecurring: true
+          IncludeOtherSubscription: true
+          IncludeSupport: true
+          IncludeDiscount: true
+          UseAmortized: false
+        BudgetType: "COST"
+
+  AthenaWorkGroup:
+    Type: "AWS::Athena::WorkGroup"
+    Properties:
+      Name: "primary"
+      State: "ENABLED"
+      WorkGroupConfiguration: {}
+
+  GlueDataCatalogEncryptionSettings:
+    Type: "AWS::Glue::DataCatalogEncryptionSettings"
+    Properties:
+      CatalogId: !Ref "AWS::AccountId"
+      DataCatalogEncryptionSettings:
+        EncryptionAtRest:
+          CatalogEncryptionMode: "DISABLED"
+        ConnectionPasswordEncryption:
+          ReturnConnectionPasswordEncrypted: false
+
