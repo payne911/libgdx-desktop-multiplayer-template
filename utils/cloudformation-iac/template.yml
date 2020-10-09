@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Metadata:
   Generator: "former2"
-Description: "A template for a Free-Tier server running fr"
+Description: "A template for a 1-year-long Free-Tier server plugged into CI/CD with GitHub Actions and DockerHub."
 Parameters: # todo: ask for SSH Key for accessing the server ?
   AdminUserName:
     Type: "String"
@@ -22,6 +22,9 @@ Parameters: # todo: ask for SSH Key for accessing the server ?
     Description: "Point to your DockerHub image. The provided default is an example. It goes 'DockerHubUserName/RepositoryName:latest'"
     Default: "payne911/marvelous-bob-server:latest"
 
+  SSHKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "EC2 KeyPair to enable SSH access to the instance. Must be created through the AWS Console."
   VPC:
     Type: AWS::EC2::VPC::Id
   SubnetA:
@@ -165,7 +168,7 @@ Resources:
     Type: "AWS::IAM::ServiceLinkedRole"
     Properties:
       AWSServiceName: "support.amazonaws.com"
-      Description: !Sub "Enables resource access for ${EC2PrefixList.OwnerId} to provide billing, ${IAMGroup} administrative and support services"
+      Description: !Sub "Enables resource access for ${EC2PrefixList.OwnerId} to provide billing, administrative and support services"
 
   IAMServiceLinkedRole3:
     Type: "AWS::IAM::ServiceLinkedRole"
@@ -232,7 +235,7 @@ Resources:
     Properties:
       ImageId: !FindInMap [RegionToAmiMap, !Ref Region, AMI]
       InstanceType: "t2.micro"
-      KeyName: !Sub "${ProjectName}-SSH-KeyPair" # todo: https://stackoverflow.com/a/59987984/9768291
+      KeyName: !Ref SSHKeyPair # todo: https://stackoverflow.com/a/59987984/9768291
       AvailabilityZone: !Sub "${Region}b"
       Tenancy: "default"
       SubnetId: !Ref SubnetA
@@ -249,7 +252,7 @@ Resources:
             SnapshotId: "snap-06d219b869139967b" # todo REMOVE? (comes from ECS-Optimized AMI?) aws ec2 describe-snapshots --snapshot-ids snap-06d219b869139967b
             VolumeType: "gp2"
             DeleteOnTermination: true
-      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw=="
+      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw==" # todo: change so that it automatically assigns the EIP?
       IamInstanceProfile: !Ref IAMRoleEcsAssume
       Monitoring: true
       Tags:
@@ -478,6 +481,6 @@ Outputs:
   IAMUserAccessKeyId: # todo: do we actually need this?
     Description: "The IAM Access Key Id to be used to reference to the IAM User you'll use to access your project in the AWS Console."
     Value: !Ref IAMAccessKey
-  IAMUserSecretAccessKey:
+  IAMUserSecretAccessKey: # todo: do we actually need this?
     Description: "The IAM Secret Access Key to be used to reference to the IAM User you'll use to access your project in the AWS Console."
     Value: !GetAtt IAMAccessKey.SecretAccessKey
