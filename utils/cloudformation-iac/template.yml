@@ -252,7 +252,12 @@ Resources:
             SnapshotId: "snap-06d219b869139967b" # todo REMOVE? (comes from ECS-Optimized AMI?) aws ec2 describe-snapshots --snapshot-ids snap-06d219b869139967b
             VolumeType: "gp2"
             DeleteOnTermination: true
-      UserData: "IyEvYmluL2Jhc2gKZWNobyBFQ1NfQ0xVU1RFUj1tYXJ2ZWxvdXMtYm9iLWVjcy1jbHVzdGVyID4+IC9ldGMvZWNzL2Vjcy5jb25maWc7ZWNobyBFQ1NfQkFDS0VORF9IT1NUPSA+PiAvZXRjL2Vjcy9lY3MuY29uZmlnOw==" # todo: change so that it automatically assigns the EIP?
+      UserData: !Base64
+        Fn::Sub: |-
+          #!/usr/bin/env bash
+          export AWS_DEFAULT_REGION=${AWS::Region}
+          id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+          aws ec2 associate-address --allocation-id ${AllocationId} --instance-id $id --allow-reassociation
       IamInstanceProfile: !Ref IAMRoleEcsAssume
       Monitoring: true
       Tags:
