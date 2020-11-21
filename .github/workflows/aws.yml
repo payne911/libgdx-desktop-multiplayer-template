@@ -39,7 +39,7 @@ jobs:
         id: docker-vars
         env:
           DH_REGISTRY: ${{ secrets.DOCKER_USERNAME }}
-          DH_REPOSITORY: marvelous-bob-server
+          DH_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "::set-output name=registry::$DH_REGISTRY"
