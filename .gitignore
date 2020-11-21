@@ -5,14 +5,6 @@
 ## Java
 *.class
 
-## Gradle
-/local.properties
-.gradle/
-gradle-app.setting
-build/
-!gradle-wrapper.jar
-.gradletasknamecache
-
 ## Package Files
 *.jar
 *.war
@@ -22,6 +14,13 @@ build/
 *.tar.gz
 *.rar
 
+## Gradle
+/local.properties
+.gradle/
+gradle-app.setting
+build/
+!gradle-wrapper.jar
+.gradletasknamecache
 
 ## Android Studio and Intellij and Android in general
 /android/libs/armeabi/
