@@ -69,14 +69,14 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: utils/deploys/task-definition.json
-          container-name: marvelous-bob-ecs-td-container-name
+          container-name: deadly-boundaries-ecs-td-container-name
           image: ${{ steps.docker-vars.outputs.full }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: marvelous-bob-ecs-service
+          service: deadly-boundaries-ecs-service
           cluster: marvelous-bob-ecs-cluster
           wait-for-service-stability: true
 

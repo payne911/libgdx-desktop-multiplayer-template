@@ -1,6 +1,6 @@
-package com.marvelousbob.client.desktop;
+package com.deadlyboundaries.client.desktop;
 
-import com.marvelousbob.client.splashScreen.ISplashWorker;
+import com.deadlyboundaries.client.splashScreen.ISplashWorker;
 
 import java.awt.*;
 
