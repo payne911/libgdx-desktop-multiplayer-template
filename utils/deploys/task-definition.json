@@ -7,7 +7,7 @@
         "memoryReservation": 300,
         "portMappings": [
           {
-            "containerPort": 80,
+            "containerPort": 81,
             "hostPort": 81,
             "protocol": "tcp"
           }
