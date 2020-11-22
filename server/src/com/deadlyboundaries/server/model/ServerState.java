@@ -3,7 +3,7 @@ package com.deadlyboundaries.server.model;
 import com.badlogic.gdx.graphics.Color;
 import com.deadlyboundaries.server.worlds.LevelGenerator;
 import com.deadlyboundaries.server.worlds.ProceduralLevelGenerator;
-import com.deadlyboundaries.common.model.MarvelousBobException;
+import com.deadlyboundaries.common.model.DeadlyBoundariesException;
 import com.deadlyboundaries.common.model.entities.dynamic.allies.Player;
 import com.deadlyboundaries.common.network.register.dto.EnemyCollisionDto;
 import com.deadlyboundaries.common.network.register.dto.GameInitializationDto;
@@ -157,15 +157,15 @@ public class ServerState {
                 .remove(playerUuid);
     }
 
-    public Color getFreeColor(UUID uuid) throws MarvelousBobException {
+    public Color getFreeColor(UUID uuid) throws DeadlyBoundariesException {
         return PLAYER_COLORS[extractFreeColorId(uuid)];
     }
 
-    public int extractFreeColorId(UUID uuid) throws MarvelousBobException {
+    public int extractFreeColorId(UUID uuid) throws DeadlyBoundariesException {
         var ints = IntStream.range(0, MAX_PLAYER_AMOUNT).boxed().collect(Collectors.toSet());
         int colorId = ints.stream().filter(i -> !playersColorId.containsValue(i)).findAny()
                 .orElseThrow(() ->
-                        new MarvelousBobException(
+                        new DeadlyBoundariesException(
                                 "Could not find an available Color Index: the room must be full."));
         playersColorId.put(uuid, colorId);
         return colorId;

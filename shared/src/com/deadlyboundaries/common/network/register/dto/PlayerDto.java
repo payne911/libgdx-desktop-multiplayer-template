@@ -1,7 +1,7 @@
 package com.deadlyboundaries.common.network.register.dto;
 
 import com.deadlyboundaries.common.model.Identifiable;
-import com.deadlyboundaries.common.model.MarvelousBobException;
+import com.deadlyboundaries.common.model.DeadlyBoundariesException;
 import com.deadlyboundaries.common.utils.UUID;
 import java.util.ArrayList;
 import lombok.AllArgsConstructor;
@@ -48,7 +48,7 @@ public final class PlayerDto implements Identifiable, Dto {
      */
     public void updateFromDto(PlayerDto otherPlayerDto) {
         if (!isSameColorAndUuid(otherPlayerDto)) {
-            throw new MarvelousBobException(
+            throw new DeadlyBoundariesException(
                     "Cannot update a PlayerDto using non-matching UUID and colorIndex.");
         }
 

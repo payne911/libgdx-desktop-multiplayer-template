@@ -5,7 +5,7 @@ import com.deadlyboundaries.common.network.register.dto.MoveActionDto;
 import com.deadlyboundaries.common.network.register.dto.NewEnemyDto;
 import com.deadlyboundaries.common.network.register.dto.PlayerUpdateDto;
 import com.deadlyboundaries.common.utils.UUID;
-import com.deadlyboundaries.common.model.MarvelousBobException;
+import com.deadlyboundaries.common.model.DeadlyBoundariesException;
 import com.deadlyboundaries.common.model.entities.Drawable;
 import com.deadlyboundaries.common.model.entities.dynamic.allies.Player;
 import com.deadlyboundaries.common.model.entities.dynamic.allies.RangedPlayer;
@@ -176,7 +176,7 @@ public class LocalGameState implements Drawable {
 
     public void removePlayer(UUID uuid) {
         if (!containsPlayerUuid(uuid)) {
-            throw new MarvelousBobException("Trying to remove a player which isn't in the GS.");
+            throw new DeadlyBoundariesException("Trying to remove a player which isn't in the GS.");
         }
 
         var iterator = players.keySet().iterator();

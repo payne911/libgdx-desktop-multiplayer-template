@@ -4,7 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.deadlyboundaries.client.MyGame;
 import com.esotericsoftware.kryonet.Client;
-import com.deadlyboundaries.common.model.MarvelousBobException;
+import com.deadlyboundaries.common.model.DeadlyBoundariesException;
 import com.deadlyboundaries.common.model.entities.dynamic.allies.Player;
 import com.deadlyboundaries.common.model.entities.dynamic.allies.RangedPlayer;
 import com.deadlyboundaries.common.network.register.dto.MoveActionDto;
@@ -152,7 +152,7 @@ public class Controller {
 
     public Player getSelfPlayer() {
         return getLocalState().getPlayer(selfPlayerUuid)
-                .orElseThrow(() -> new MarvelousBobException(
+                .orElseThrow(() -> new DeadlyBoundariesException(
                         "Illegal State: could not find the PlayerDto associated with yourself (your client)."));
     }
 }

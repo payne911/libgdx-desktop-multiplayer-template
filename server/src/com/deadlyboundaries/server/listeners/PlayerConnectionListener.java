@@ -3,7 +3,7 @@ package com.deadlyboundaries.server.listeners;
 import com.deadlyboundaries.server.model.ServerState;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Server;
-import com.deadlyboundaries.common.model.MarvelousBobException;
+import com.deadlyboundaries.common.model.DeadlyBoundariesException;
 import com.deadlyboundaries.common.model.entities.dynamic.allies.Player;
 import com.deadlyboundaries.common.network.listeners.AbstractListener;
 import com.deadlyboundaries.common.network.register.dto.PlayerConnectionDto;
@@ -36,7 +36,7 @@ public class PlayerConnectionListener extends AbstractListener<PlayerConnectionD
             serverState.addPlayer(player);
             server.sendToTCP(connection.getID(), serverState.getGameInitDto(uuid));
             server.sendToAllExceptTCP(connection.getID(), player);
-        } catch (MarvelousBobException e) {
+        } catch (DeadlyBoundariesException e) {
             e.printStackTrace();
             log.error(e.getMessage());
             // todo: send Connection Refused
