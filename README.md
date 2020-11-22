@@ -1,4 +1,4 @@
-# Marvelous Bob
+# Deadly Boundaries
 Top-down multiplayer coop Defend-Your-Base game.
 
 ![early_demo](https://raw.githubusercontent.com/payne911/marvelous-bob/master/utils/media/early_demo.gif)

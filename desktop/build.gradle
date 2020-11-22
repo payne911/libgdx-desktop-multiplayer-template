@@ -5,7 +5,7 @@ apply plugin: 'application'
 
 sourceSets.main.resources.srcDirs = ["../client/assets"]
 
-mainClassName = "com.marvelousbob.client.desktop.DesktopLauncher"
+mainClassName = "com.deadlyboundaries.client.desktop.DesktopLauncher"
 def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
 project.ext.assetsDir = new File("../client/assets")
 

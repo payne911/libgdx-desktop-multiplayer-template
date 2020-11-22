@@ -1,5 +1,5 @@
 # Server
-Server-side application for Marvelous Bob game.
+Server-side application for Deadly Boundaries game.
 
 ## To launch the server locally (for devs)
 The ``.run`` folder at the root of the repository contains a few IntelliJ ``Run Configuration``.

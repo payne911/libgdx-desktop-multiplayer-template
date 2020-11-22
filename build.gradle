@@ -27,8 +27,8 @@ allprojects {
     apply plugin: 'idea'
 
     ext {
-        appName = "marvelous-bob"
-        gdxVersion = '1.9.12-SNAPSHOT'
+        appName = "deadly-boundaries"
+        gdxVersion = '1.9.12'
 
         gdxAiVersion = '1.8.2'
 

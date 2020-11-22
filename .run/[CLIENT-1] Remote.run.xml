@@ -3,12 +3,12 @@
     <envs>
       <env name="mbs_isLocal" value="false" />
     </envs>
-    <option name="MAIN_CLASS_NAME" value="com.marvelousbob.client.desktop.DesktopLauncher" />
+    <option name="MAIN_CLASS_NAME" value="com.deadlyboundaries.client.desktop.DesktopLauncher" />
     <module name="multiplayer-template.desktop.main" />
     <option name="VM_PARAMETERS" value="--enable-preview" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.marvelousbob.client.desktop.*" />
+        <option name="PATTERN" value="com.deadlyboundaries.client.desktop.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

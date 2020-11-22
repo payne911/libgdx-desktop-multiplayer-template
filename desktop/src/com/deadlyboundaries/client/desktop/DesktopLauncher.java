@@ -2,8 +2,8 @@ package com.deadlyboundaries.client.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.deadlyboundaries.client.DeadlyBoundary;
-import com.marvelousbob.common.network.constants.GameConstant;
+import com.deadlyboundaries.client.DeadlyBoundaries;
+import com.deadlyboundaries.common.network.constants.GameConstant;
 
 public class DesktopLauncher {
     public static void main(String[] arg) {
@@ -12,7 +12,7 @@ public class DesktopLauncher {
         config.height = GameConstant.SIZE_Y;
 //        config.fullscreen = true;
 
-        DeadlyBoundary core = new DeadlyBoundary();
+        DeadlyBoundaries core = new DeadlyBoundaries();
         core.setSplashWorker(new DesktopSplashWorker());
         new LwjglApplication(core, config);
     }
