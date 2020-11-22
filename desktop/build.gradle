@@ -3,7 +3,7 @@ plugins {
 }
 apply plugin: 'application'
 
-sourceSets.main.resources.srcDirs = ["../client/assets"]
+sourceSets.main.resources.srcDirs = ["../client/assets", "../shared/resources"]
 
 mainClassName = "com.deadlyboundaries.client.desktop.DesktopLauncher"
 def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)

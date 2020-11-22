@@ -9,3 +9,5 @@ jar {
         attributes 'Main-Class': 'com.deadlyboundaries.server.DeadlyBoundariesServerLauncher'
     }
 }
+
+sourceSets.main.resources.srcDirs = ["../shared/resources"]
