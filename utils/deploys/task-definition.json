@@ -24,18 +24,7 @@
     ],
     "family": "deadly-boundaries-td",
     "volumes": [],
-    "requiresAttributes": [
-      {
-        "name": "com.amazonaws.ecs.capability.docker-remote-api.1.17"
-      },
-      {
-        "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
-      }
-    ],
     "placementConstraints": [],
-    "compatibilities": [
-      "EC2"
-    ],
     "requiresCompatibilities": [
       "EC2"
     ]
