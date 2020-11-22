@@ -53,6 +53,8 @@ In order to obtain a second game server on the same EC2 (since [Marvelous Bob](h
   5. Update the ``task-definition.json`` file with the newly created one
   6. Create a new Service (pointed to that new Task Definition) on the same ECS Cluster
   7. Update the EC2's Security Group to allow traffic into the Host port defined above
+  
+Now, the code of this repository assumes Host and Container ports are the same (for example: publishing 80 -> 80). For that reason, if you do not also modify the ``Container Port`` of the ``Task Definition`` (and the ``EXPOSE`` of your Dockerfile), you'll get a ``Connection Refused`` from trying to contact an unpublished port.
 
 ## CI/CD
 Done through GitHub Actions: deploying a Docker image into our public Docker Hub repository, and updating the ECS stack subsequently.
