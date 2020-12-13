@@ -1,13 +1,43 @@
 plugins {
-    // used to build the jar deployed as the server application
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+	// used to build the jar deployed as the server application
+	id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+apply plugin: 'application'
+
+
+sourceSets.main.resources.srcDirs = ["src/main/resources/"] // for the logback config
+
+sourceCompatibility = 14.0
+mainClassName = 'com.deadlyboundaries.server.ServerLauncher'
+eclipse.project.name = appName + '-server'
+
+// enabling Java 14 features
+tasks.withType(JavaCompile) {
+	options.compilerArgs += "--enable-preview"
+}
+tasks.withType(Test) {
+	jvmArgs += "--enable-preview"
+}
+tasks.withType(JavaExec) {
+	jvmArgs += '--enable-preview'
+}
+
+dependencies {
+	implementation project(':shared')
+
+	api "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+	api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+
+	api "ch.qos.logback:logback-classic:$logbackVersion" // Logback implements the Slf4j logging API
+	api "io.vertx:vertx-core:$vertxVersion" // For the server-side WebSocket handling
 }
 
 jar {
-    project.version="" // to remove version number from the built jar's name
-    manifest {
-        attributes 'Main-Class': 'com.deadlyboundaries.server.DeadlyBoundariesServerLauncher'
-    }
+	project.version="" // to remove version number from the built jar's name
+	dependsOn configurations.runtimeClasspath
+	from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+	manifest {
+		attributes 'Main-Class': project.mainClassName
+	}
 }
-
-sourceSets.main.resources.srcDirs = ["../shared/resources"]

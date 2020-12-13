@@ -1,1 +1,1 @@
-include 'desktop', 'client', 'server', 'shared'
+include 'core', 'server', 'lwjgl3', 'shared', 'html'

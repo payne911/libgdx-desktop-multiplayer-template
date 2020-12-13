@@ -1,0 +1,1 @@
+You can place your assets in here (and remove this current `README.md` file).

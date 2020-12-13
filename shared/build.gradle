@@ -1,5 +1,6 @@
-jar {
-    from('src') {
-        include '**/*.properties'
-    }
+eclipse.project.name = appName + '-shared'
+
+// with the way this project is set up, all the modules end up having access to those dependencies
+dependencies {
+	implementation "com.github.czyzby:gdx-websocket:$websocketVersion"
 }

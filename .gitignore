@@ -1,3 +1,18 @@
+.vertx
+
+## GWT:
+war/
+html/war/gwt_bree/
+html/gwt-unitCache/
+.apt_generated/
+html/war/WEB-INF/deploy/
+html/war/WEB-INF/classes/
+.gwt/
+gwt-unitCache/
+www-test/
+.gwt-tmp/
+*.symbolMap
+
 ## SSH KEYS
 *.pem
 *.ppk

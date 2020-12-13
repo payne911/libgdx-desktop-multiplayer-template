@@ -1,0 +1,12 @@
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+	api project(':shared')
+
+	api "com.badlogicgames.gdx:gdx:$gdxVersion"
+	api "com.kotcrab.vis:vis-ui:$visUiVersion"
+	api "com.github.czyzby:gdx-websocket:$websocketVersion"
+	api "space.earlygrey:shapedrawer:$shapeDrawerVersion"
+	api "com.github.payne911:PieMenu:$pieMenuVersion"
+}
